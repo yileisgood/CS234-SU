@@ -62,23 +62,20 @@ def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-3):
     k = 0
     ############################
     # YOUR IMPLEMENTATION HERE #
+    while k == 0 or ((value_function_new - value_function).max() > tol):
 
-    while k == 0 or (value_function_new - value_function).max() > tol:
-        k += 1
-        value_function_new = value_function
+        value_function = np.copy(value_function_new)
         for s in range(nS):
             value_function_new[s] = P[s][policy[s]][0][2] + gamma * (
                 P[s][policy[s]][0][0] * value_function[P[s][policy[s]][0][1]] +
                 (1 - P[s][policy[s]][0][0]) * value_function[s])
+        k += 1
+
     clear_output(wait=True)
     print('V{}: {}'.format(k, value_function))
 
     ############################
     return value_function
-
-
-# %% # <|=<<>>=Cellcode=<<>>=|>
-# |=>
 
 
 def policy_improvement(P, nS, nA, value_from_policy, policy, gamma=0.9):
@@ -143,7 +140,7 @@ def policy_iteration(P, nS, nA, gamma=0.9, tol=10e-3):
     # YOUR IMPLEMENTATION HERE #
     i = 0
     while i == 0 or np.linalg.norm((policy - policy_new), 1) > 0:
-        policy = policy_new
+        policy = np.copy(policy_new)
         value_function = policy_evaluation(P, nS, nA, policy)
         policy_new = policy_improvement(P, nS, nA, value_function, policy)
         i += 1
@@ -238,6 +235,8 @@ if __name__ == "__main__":
     V_vi, p_vi = value_iteration(env.P, env.nS, env.nA, gamma=0.9, tol=1e-3)
     render_single(env, p_vi, 100)
 
+# %% # <|=<<>>=Cellcode=<<>>=|>
+# |=>
 # %%
 
 # %%
