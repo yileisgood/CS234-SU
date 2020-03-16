@@ -66,13 +66,13 @@ def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-3):
 
         value_function = np.copy(value_function_new)
         for s in range(nS):
-            value_function_new[s] = P[s][policy[s]][0][2] + gamma * (
-                P[s][policy[s]][0][0] * value_function[P[s][policy[s]][0][1]] +
-                (1 - P[s][policy[s]][0][0]) * value_function[s])
+            Reward = 0
+            for next_s in range(len(P[s][policy[s]])):
+                Reward += P[s][policy[s]][next_s][2] + gamma * (
+                    P[s][policy[s]][next_s][0] *
+                    value_function[P[s][policy[s]][next_s][1]])
+            value_function_new[s] = Reward
         k += 1
-
-    clear_output(wait=True)
-    print('V{}: {}'.format(k, value_function))
 
     ############################
     return value_function
@@ -105,9 +105,12 @@ def policy_improvement(P, nS, nA, value_from_policy, policy, gamma=0.9):
     # YOUR IMPLEMENTATION HERE #
     for s in range(nS):
         for a in range(nA):
-            Q_value[s][a] = P[s][a][0][2] + gamma * (
-                P[s][a][0][0] * value_from_policy[P[s][a][0][1]] +
-                (1 - P[s][a][0][0]) * value_from_policy[s])
+            Reward = 0
+            for next_s in range(len(P[s][policy[s]])):
+                Reward += P[s][a][next_s][2] + gamma * (
+                    P[s][a][next_s][0] * value_from_policy[P[s][a][next_s][1]])
+            Q_value[s][a] = Reward
+
     new_policy = np.argmax(Q_value, axis=1)
 
     ############################
@@ -145,9 +148,6 @@ def policy_iteration(P, nS, nA, gamma=0.9, tol=10e-3):
         policy_new = policy_improvement(P, nS, nA, value_function, policy)
         i += 1
 
-        print('P{}: {}'.format(i, policy_new))
-        print('P{}: {}'.format(i, policy))
-
     ############################
     return value_function, policy
 
@@ -174,8 +174,34 @@ def value_iteration(P, nS, nA, gamma=0.9, tol=1e-3):
 
     value_function = np.zeros(nS)
     policy = np.zeros(nS, dtype=int)
+    value_function_new = np.zeros(nS)
+
+    Q_value = np.zeros((nS, nA))
+    k = 0
     ############################
     # YOUR IMPLEMENTATION HERE #
+    while k == 0 or ((value_function_new - value_function).max() > tol):
+        value_function = np.copy(value_function_new)
+        for s in range(nS):
+            for a in range(nA):
+                Reward = 0
+                for next_s in range(len(P[s][policy[s]])):
+                    Reward += P[s][a][next_s][2] + gamma * (
+                        P[s][a][next_s][0] *
+                        value_function[P[s][a][next_s][1]])
+                Q_value[s][a] = Reward
+
+        value_function_new = Q_value.max(axis=1)
+        k += 1
+
+    for s in range(nS):
+        for a in range(nA):
+            Reward = 0
+            for next_s in range(len(P[s][policy[s]])):
+                Reward += P[s][a][next_s][2] + gamma * (
+                    P[s][a][next_s][0] * value_function[P[s][a][next_s][1]])
+            Q_value[s][a] = Reward
+    policy = np.argmax(Q_value, axis=1)
 
     ############################
     return value_function, policy
@@ -222,8 +248,8 @@ def render_single(env, policy, max_steps=100):
 if __name__ == "__main__":
 
     # comment/uncomment these lines to switch between deterministic/stochastic environments
-    env = gym.make("Deterministic-4x4-FrozenLake-v0")
-    # env = gym.make("Stochastic-4x4-FrozenLake-v0")
+    # env = gym.make("Deterministic-4x4-FrozenLake-v0")
+    env = gym.make("Stochastic-4x4-FrozenLake-v0")
 
     print("\n" + "-" * 25 + "\nBeginning Policy Iteration\n" + "-" * 25)
 
@@ -237,6 +263,3 @@ if __name__ == "__main__":
 
 # %% # <|=<<>>=Cellcode=<<>>=|>
 # |=>
-# %%
-
-# %%
